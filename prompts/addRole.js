@@ -9,7 +9,6 @@ const db = mysql.createConnection(
         password: 'GayauGayau',
         database: 'humanResource_db'
     },
-    console.log('connected to the humanResource_db database ')
 )
 
 
