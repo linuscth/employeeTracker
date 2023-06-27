@@ -4,7 +4,7 @@ const addDeptPrompt = require('./prompts/addDept');
 const upddateEmployeeRolePrompt = require('./prompts/upddateEmployeeRole')
 const mainPrompt = require('./prompts/prompt');
 const addRolePrompt = require('./prompts/addRole');
-
+const addEmployeePrompt = require('./prompts/addEmployee')
 
 const db = mysql.createConnection(
     {
@@ -39,7 +39,7 @@ class Questions {
                         break;
 
 
-                        
+
                     case 'View all Roles':
                         const viewALlRoleSql = `SELECT * FROM role;`
 
@@ -80,41 +80,79 @@ class Questions {
                                 console.log(err)
                                 return;
                             }
-                            console.table(data);
+                            console.log(data);
                             this.askQuestions()
                         })
 
                         break;
 
-                    case 'add role':
+                    case 'Add Role':
                         inquirer.prompt(addRolePrompt).then(async (data) => {
                             const addRoleName = data.addRoleName;
                             const addRoleSalary = data.addRoleSalary;
                             const addRoleBelongsTo = data.addRoleBelongsTo;
+                            const getDeptIdsql = `SELECT id FROM department WHERE name = (?)`;
+                            const insertroleSeedSql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?);`;
 
-                            db.query(`SELECT id FROM department WHERE name = (?)`, addRoleBelongsTo, (err, departmentData) => {
+                            db.query(getDeptIdsql, addRoleBelongsTo, (err, departmentData) => {
                                 if (err) {
                                     console.log(err);
                                 };
                                 const deptId = departmentData[0].id;
 
-                                db.query(`INSERT INTO role (title, salary, department_id)
-                            VALUES (?, ?, ?);`, [addRoleName, addRoleSalary, deptId], (err, data) => {
+                                db.query(insertroleSeedSql, [addRoleName, addRoleSalary, deptId], (err, data) => {
                                     if (err) {
                                         console.log(err);
                                     };
-                                    console.log(data);
                                     this.askQuestions()
                                 }
                                 )
-
-
-
                             })
                         })
                         break;
+                    case 'Add Employee':
+
+                        inquirer.prompt(addEmployeePrompt).then((data) => {
+                            const addEmployeeFName = data.addEmployeeFName;
+                            const addEmployeeLName = data.addEmployeeLName;
+                            const addEmployeeRole = data.addEmployeeRole;
+                            const addEmployeeManager = data.addEmployeeManager.split(' ');
+                            let managerId = null;
+                            let roleID;
+                            const addEmployeeSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ? ,? ,? );`;
+                            console.log(addEmployeeFName);
+                            console.log(addEmployeeLName);
+                            console.log(addEmployeeRole);
+                            console.log(addEmployeeManager);
+
+                            db.query(`SELECT id FROM role WHERE title = ? ;`, addEmployeeRole, (err, data) => {
+                                if (err) {
+                                    console.log(err);
+                                }
+                                roleID = data[0].id;
+
+                                db.query(`SELECT id FROM employee WHERE first_name = ? AND last_name = ?;`, addEmployeeManager, (err, data) => {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                    managerId = data[0].id;
+                                    db.query(addEmployeeSql, [addEmployeeFName, addEmployeeLName, roleID, managerId], (err, data) => {
+                                        if (err) {
+                                            console.log(err);
+                                        }
+                                        console.log(`successfully added the employee `);
+                                        this.askQuestions();
+                                    })
+
+                                })
 
 
+
+
+                            }
+                            )
+                        })
+                        break;
                     default:
                         this.askQuestions()
 
