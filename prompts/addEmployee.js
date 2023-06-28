@@ -1,13 +1,14 @@
 
 // add employee option 
 const mysql = require('mysql2');
+require('dotenv').config()
 const db = mysql.createConnection(
     {
-        host: 'localhost',
-        user: 'root',
-        password: 'GayauGayau',
-        database: 'humanResource_db'
-    },
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+    }
 )
 
 
@@ -50,17 +51,10 @@ const addEmployeePrompt = [
         message: "Who is the employee's manager?",
         choices: async () => {
             try {
-                const data1 = await db.promise().query(`SELECT first_name FROM employee;`);
-                const data2 = await db.promise().query(`SELECT last_name FROM employee;`);
-                let dataFname = data1[0].map((employee) => employee.first_name);
-                let dataLname = data2[0].map((employee) => employee.last_name);
-                let names = ['none'];
-                for (let i = 0; i < dataFname.length; i++) {
-                    const fname = dataFname[i];
-                    const lname = dataLname[i];
-                    names.push(fname + ' ' + lname)
-                }
-                return names
+                const data = await db.promise().query(`SELECT CONCAT(first_name, ' ', last_name) AS fullName FROM employee;`);
+                let fullNameArr = data[0].map((employee) => employee.fullName);
+                fullNameArr.push('none')
+                return fullNameArr
             } catch (err) {
                 console.log(err);
             }
