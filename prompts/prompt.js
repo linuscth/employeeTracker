@@ -1,7 +1,5 @@
 
-
-
-
+// main Prompt
 const mainPrompt = [
     {
         type: 'list',
