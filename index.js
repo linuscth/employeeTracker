@@ -30,7 +30,7 @@ const addEmployeeSql = `INSERT INTO employee (first_name, last_name, role_id, ma
 const getRoleIdSql = `SELECT id FROM role WHERE title = ? ;`;
 const updateEmployeeRoleSql = `UPDATE employee SET role_id = ? WHERE first_name = ? AND last_name = ?;`;
 const viewEmployeesByManagerIdSql = `SELECT id, first_name, last_name FROM employee WHERE manager_id = ?;`;
-const viewEmployeesByDeptIdSql = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department FROM department JOIN role ON department.id = role.department_id JOIN employee ON role.id = employee.role_id WHERE department_id = ?  ;`
+const viewEmployeesByDeptIdSql = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department FROM department JOIN role ON department.id = role.department_id JOIN employee ON role.id = employee.role_id WHERE department.name = ?  ;`
 
 
 class Questions {
@@ -182,9 +182,7 @@ class Questions {
 
                         inquirer.prompt(viewEmployeeByDepartmentPrompt).then(async (data) => {
                             const dept = data.viewEmployeeBydepartment;
-                            const getDeptId = await db.promise().query(getDeptIdsql, dept);
-                            const deptId = getDeptId[0][0].id;
-                            const viewEmployeesByDeptId = await db.promise().query(viewEmployeesByDeptIdSql, deptId)
+                            const viewEmployeesByDeptId = await db.promise().query(viewEmployeesByDeptIdSql, dept)
                             console.table(viewEmployeesByDeptId[0])
                             this.askQuestions()
                         })
