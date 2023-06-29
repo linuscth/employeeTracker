@@ -1,10 +1,12 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const addDeptPrompt = require('./prompts/addDept');
-const upddateEmployeeRolePrompt = require('./prompts/upddateEmployeeRole')
+const upddateEmployeeRolePrompt = require('./prompts/upddateEmployeeRole');
 const mainPrompt = require('./prompts/prompt');
 const addRolePrompt = require('./prompts/addRole');
-const addEmployeePrompt = require('./prompts/addEmployee')
+const addEmployeePrompt = require('./prompts/addEmployee');
+const viewEmployeeByManagerPrompt = require('./prompts/viewEmployeeByManager');
+const viewEmployeeByDepartmentPrompt = require('./prompts/viewEmployeeByDepartment');
 require('dotenv').config()
 const db = mysql.createConnection(
     {
@@ -21,13 +23,14 @@ const viewAllEmploySql = `SELECT employee.id, employee.first_name, employee.last
 const viewALlRoleSql = `SELECT * FROM role;`
 const addDeptSql = `INSERT INTO department (name) VALUES (?);`;
 const viewALlDeptSql = `SELECT * FROM department;`;
-const getDeptIdsql = `SELECT id FROM department WHERE name = (?)`;
+const getDeptIdsql = `SELECT id FROM department WHERE name = ?`;
 const insertroleSeedSql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?);`;
 const getManagerIdSql = `SELECT id FROM employee WHERE first_name = ? AND last_name = ?;`;
 const addEmployeeSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ? ,? ,? );`;
 const getRoleIdSql = `SELECT id FROM role WHERE title = ? ;`;
 const updateEmployeeRoleSql = `UPDATE employee SET role_id = ? WHERE first_name = ? AND last_name = ?;`;
-
+const viewEmployeesByManagerIdSql = `SELECT id, first_name, last_name FROM employee WHERE manager_id = ?;`;
+const viewEmployeesByDeptIdSql = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department FROM department JOIN role ON department.id = role.department_id JOIN employee ON role.id = employee.role_id WHERE department_id = ?  ;`
 
 
 class Questions {
@@ -136,7 +139,7 @@ class Questions {
                             } catch (error) { console.log(error); }
                         })
                         break;
-
+                    // case upddate employee role
                     case 'Update Employee Role':
                         inquirer.prompt(upddateEmployeeRolePrompt).then(async (data) => {
                             const updateEmployeeRole = data.updateEmployeeRole;
@@ -157,13 +160,49 @@ class Questions {
 
                         break;
 
+                    //case view Employees By Manager 
+                    case 'View Employees By Manager':
 
+                        inquirer.prompt(viewEmployeeByManagerPrompt).then(async (data) => {
+                            const ManagerNameArr = data.viewEmployeeByManagerName.split(' ');
+                            const getManagerId = await db.promise().query(getManagerIdSql, ManagerNameArr);
+                            const managerId = getManagerId[0][0].id;
+                            const viewEmployeesByManagerId = await db.promise().query(viewEmployeesByManagerIdSql, managerId)
+                            console.table(viewEmployeesByManagerId[0])
+                            this.askQuestions()
+                        })
+
+
+                        break;
+
+
+                    //case view Employees By Department 
+
+                    case 'View Employees By Department':
+
+                        inquirer.prompt(viewEmployeeByDepartmentPrompt).then(async (data) => {
+                            const dept = data.viewEmployeeBydepartment;
+                            const getDeptId = await db.promise().query(getDeptIdsql, dept);
+                            const deptId = getDeptId[0][0].id;
+                            const viewEmployeesByDeptId = await db.promise().query(viewEmployeesByDeptIdSql, deptId)
+                            console.table(viewEmployeesByDeptId[0])
+                            this.askQuestions()
+                        })
+
+
+                        break;
+
+                    // case quit
                     case 'Quit':
 
                         console.log('thank you for using Employee tracker')
 
 
                         break;
+
+
+
+
 
                     default:
                         this.askQuestions()
